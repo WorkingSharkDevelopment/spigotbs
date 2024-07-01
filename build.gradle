@@ -1,0 +1,104 @@
+plugins {
+    id 'java'
+}
+
+// - edit these things as you want -
+group = 'hu.kbence01'
+version = '1.0.0'
+def mcVersion = '1.18.2'
+def targetJavaVersion = 17
+
+// - include dependencies here
+dependencies {
+    compileOnly "org.spigotmc:spigot-api:1.18.2-R0.1-SNAPSHOT"
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "spigotmc-repo"
+        url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+    }
+    maven {
+        name = "sonatype"
+        url = "https://oss.sonatype.org/content/groups/public/"
+    }
+}
+
+task setupDirectories() {
+    new File('server').mkdir()
+}
+
+task downloadServer(type: SpigotDownloader) {
+    dependsOn(setupDirectories)
+    sourceUrl "https://download.getbukkit.org/spigot/spigot-${ mcVersion }.jar"
+    target new File("server/spigot-${ mcVersion }.jar")
+}
+
+task copyPlugin() {
+    dependsOn(setupDirectories, build)
+    copy {
+        from 'build/libs'
+        into 'server/plugins'
+        include '**.jar'
+    }
+}
+
+task makeEula() {
+    dependsOn(setupDirectories)
+    def eulaFile = new File('server', 'eula.txt')
+    if(!eulaFile.exists()) {
+        eulaFile.text = 'eula=true'
+    }
+}
+
+task runServer(type: JavaExec) {
+    dependsOn(setupDirectories, build, downloadServer, copyPlugin, makeEula)
+    main = '-jar'
+    args "spigot-${mcVersion}.jar"
+    workingDir 'server'
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+}
+
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        options.release.set(targetJavaVersion)
+    }
+}
+
+
+class SpigotDownloader extends DefaultTask {
+
+    @Input
+    String sourceUrl
+
+    @OutputFile
+    File target
+
+    @TaskAction
+    void download() {
+        if(!target.exists()) {
+            ant.get(src: sourceUrl, dest: target)
+        }
+    }
+
+}

@@ -1,0 +1,4 @@
+name: SpigotBS
+version: '${version}'
+main: hu.kbence01.spigotbs.SpigotBS
+api-version: '1.18'
