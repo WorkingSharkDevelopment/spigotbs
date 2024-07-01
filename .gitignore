@@ -3,4 +3,4 @@ server
 .gradle
 
 # to not include my own code
-src/hu/kbence01/spigotbs
+src/main/java/hu/kbence01/spigotbs
