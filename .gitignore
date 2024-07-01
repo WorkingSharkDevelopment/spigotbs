@@ -1,6 +1,3 @@
 build
 server
 .gradle
-
-# to not include my own code
-src/main/java/hu/kbence01/spigotbs
