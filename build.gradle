@@ -1,3 +1,7 @@
+/**
+ * Made by kbence01 for easier plugin development
+ */
+
 plugins {
     id 'java'
 }
